@@ -17,6 +17,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Hardcode Supabase credentials in source
+        run: |
+          sed -i "s|__SUPABASE_URL__|${{ secrets.VITE_SUPABASE_URL }}|g" src/lib/supabase-config.js
+          sed -i "s|__SUPABASE_ANON_KEY__|${{ secrets.VITE_SUPABASE_ANON_KEY }}|g" src/lib/supabase-config.js
+
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
