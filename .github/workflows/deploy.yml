@@ -34,10 +34,21 @@ jobs:
       - name: Build project (Vite reads .env.production)
         run: npm run build
 
-      - name: Prepare Vercel output
+      - name: Prepare Vercel Build Output
         run: |
-          mkdir -p .vercel/output/static
-          cp -r dist/* .vercel/output/static/
+          mkdir -p .vercel/output/static/assets
+          cp dist/index.html .vercel/output/static/
+          cp dist/favicon.svg .vercel/output/static/ 2>/dev/null || true
+          cp -r dist/assets/* .vercel/output/static/assets/ 2>/dev/null || true
+          cat > .vercel/output/config.json << 'CONFEOF'
+          {
+            "version": 3,
+            "routes": [
+              { "handle": "filesystem" },
+              { "src": "^(?:/(.*))$", "dest": "/index.html", "check": true }
+            ]
+          }
+          CONFEOF
 
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
