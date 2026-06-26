@@ -29,18 +29,32 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
-      - name: Deploy to Vercel (Production)
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        run: |
-          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-          cp .vercel/.env.production.local .env.production
-          vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-          vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Pull Vercel env variables
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Deploy to Vercel (Preview)
-        if: github.event_name == 'pull_request'
+      - name: Build locally with Vite
         run: |
-          vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
           cp .vercel/.env.production.local .env.production
-          vercel build --token=${{ secrets.VERCEL_TOKEN }}
-          vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+          npm run build
+
+      - name: Verify credentials in bundle
+        run: grep -l "mmwndnsoiuinibtyfqsj" dist/assets/*.js
+
+      - name: Prepare Vercel Build Output
+        run: |
+          mkdir -p .vercel/output/static
+          cp -r dist/* .vercel/output/static/
+          cat > .vercel/output/config.json << 'EOF'
+          {"version":3,"routes":[{"handle":"filesystem"},{"src":"^(?:/(.*))$","dest":"/index.html","check":true}]}
+          EOF
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+          fi
