@@ -2,7 +2,7 @@
  * POI suggestions via Overpass API (OpenStreetMap).
  * Free, public, rate-limited (fair use: ~1 req/s).
  */
-const OVERPASS_URL = '/api/overpass'
+const OVERPASS_URL = '/api/overpass?data='
 const TIMEOUT_MS = 10000
 
 const CATEGORIES = {
@@ -51,12 +51,9 @@ export async function fetchPOIs(lat, lng, radius = 5000) {
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
 
   try {
-    const res = await fetch(OVERPASS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: buildQuery(lat, lng, radius),
-      signal: controller.signal,
-    })
+    const query = buildQuery(lat, lng, radius)
+    const url = OVERPASS_URL + encodeURIComponent(query)
+    const res = await fetch(url, { signal: controller.signal })
     if (!res.ok) throw new Error(`Overpass HTTP ${res.status}`)
     const json = await res.json()
     const elements = json.elements || []

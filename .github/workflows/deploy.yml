@@ -34,8 +34,10 @@ jobs:
         run: |
           vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           cp .vercel/.env.production.local .env.production
-          node -e "const p=require('./.vercel/project.json');p.settings.installCommand='npm install --legacy-peer-deps';require('fs').writeFileSync('./.vercel/project.json',JSON.stringify(p))"
-          vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+          npm run build
+          mkdir -p .vercel/output/static
+          cp -r dist/* .vercel/output/static/
+          echo '{"version":3,"routes":[{"handle":"filesystem"},{"src":"^(?:/(.*))$","dest":"/index.html","check":true}]}' > .vercel/output/config.json
           vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Vercel (Preview)
@@ -43,6 +45,8 @@ jobs:
         run: |
           vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
           cp .vercel/.env.production.local .env.production
-          node -e "const p=require('./.vercel/project.json');p.settings.installCommand='npm install --legacy-peer-deps';require('fs').writeFileSync('./.vercel/project.json',JSON.stringify(p))"
-          vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          npm run build
+          mkdir -p .vercel/output/static
+          cp -r dist/* .vercel/output/static/
+          echo '{"version":3,"routes":[{"handle":"filesystem"},{"src":"^(?:/(.*))$","dest":"/index.html","check":true}]}' > .vercel/output/config.json
           vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
