@@ -12,30 +12,35 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'npm'
-      - run: npm install --legacy-peer-deps
-      - run: npm install -g vercel@latest
-      - name: Pull env vars from Vercel
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Build with Vite
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Deploy to Vercel (Production)
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: |
+          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           cp .vercel/.env.production.local .env.production
-          npm run build
-          grep -q "mmwndnsoiuinibtyfqsj" dist/assets/*.js || { echo "ERROR: Supabase URL not in bundle"; exit 1; }
-      - name: Prepare prebuilt output
+          vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel (Preview)
+        if: github.event_name == 'pull_request'
         run: |
-          mkdir -p .vercel/output/static
-          cp -r dist/* .vercel/output/static/
-          echo '{"version":3,"routes":[{"handle":"filesystem"},{"src":"^(?:/(.*))$","dest":"/index.html","check":true}]}' > .vercel/output/config.json
-      - name: Deploy
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
-          else
-            vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-          fi
+          vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          cp .vercel/.env.production.local .env.production
+          vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
