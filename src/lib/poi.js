@@ -2,7 +2,7 @@
  * POI suggestions via Overpass API (OpenStreetMap).
  * Free, public, rate-limited (fair use: ~1 req/s).
  */
-const OVERPASS_URL = 'https://overpass-api.de/api/interpreter'
+const OVERPASS_URL = '/api/overpass'
 const TIMEOUT_MS = 10000
 
 const CATEGORIES = {
