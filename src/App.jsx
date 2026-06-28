@@ -416,17 +416,17 @@ function SidePanel({ city, checked, onToggle, onClose, supabasePlaces, onDeleteD
   const [poiAdding, setPoiAdding] = useState({})
 
   const handleSuggestPlaces = async () => {
-    if (!activeCityId) return
-    const cityObj = allCitiesRef.current.find(c => c.id === activeCityId || c.cities?.some(s => s.id === activeCityId))
-    if (!cityObj) return
+    if (!city || !city.coordinates) return
     let lat, lng
-    if (cityObj.type === 'city') { lng = cityObj.coordinates[0]; lat = cityObj.coordinates[1] }
-    else {
-      const sub = cityObj.cities?.find(c => c.id === activeCityId)
-      if (!sub) return
-      const dbCity = citiesDatabase.find(c => c.city === sub.name)
+    const target = selectedSubCity || city
+    if (target.type === 'city' && target.coordinates) {
+      lng = target.coordinates[0]; lat = target.coordinates[1]
+    } else if (selectedSubCity) {
+      const dbCity = citiesDatabase.find(c => c.city === selectedSubCity.name)
       if (dbCity) { lng = dbCity.lng; lat = dbCity.lat }
-      else { lng = cityObj.coordinates[0]; lat = cityObj.coordinates[1] }
+      else { lng = city.coordinates[0]; lat = city.coordinates[1] }
+    } else {
+      lng = city.coordinates[0]; lat = city.coordinates[1]
     }
     setPoiState('loading'); setPoiResults([])
     const results = await fetchPOIs(lat, lng, 3000)
