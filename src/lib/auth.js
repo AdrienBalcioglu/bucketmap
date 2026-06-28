@@ -5,12 +5,12 @@ let attempts = 0
 let lockoutUntil = null
 
 export function getStoredPin() {
-  return localStorage.getItem('cutemap-pin') || ''
+  return localStorage.getItem('bucketmap-pin') || ''
 }
 
 export function setStoredPin(pin) {
-  if (pin) localStorage.setItem('cutemap-pin', pin)
-  else localStorage.removeItem('cutemap-pin')
+  if (pin) localStorage.setItem('bucketmap-pin', pin)
+  else localStorage.removeItem('bucketmap-pin')
 }
 
 export function hasPin() {

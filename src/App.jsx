@@ -35,7 +35,7 @@ function getLockout() {
   return r > 0 ? r : 0
 }
 
-function itemKeyDynamic(placeId) { return `cutemap-${placeId}` }
+function itemKeyDynamic(placeId) { return `bucketmap-${placeId}` }
 
 /* ── Icons ── */
 function HeartIcon({ filled, color }) {
@@ -324,15 +324,15 @@ function PlacesListView({ cityId, places, checked, onToggle, onDeletePlace, onAd
   }
 
   const [order, setOrder] = useState(() => {
-    try { const s = localStorage.getItem(`cutemap-order-${cityId}`); if (s) return JSON.parse(s) } catch {}
+    try { const s = localStorage.getItem(`bucketmap-order-${cityId}`); if (s) return JSON.parse(s) } catch {}
     return []
   })
 
   useEffect(() => {
-    try { const s = localStorage.getItem(`cutemap-order-${cityId}`); if (s) { setOrder(JSON.parse(s)); return } } catch {}
+    try { const s = localStorage.getItem(`bucketmap-order-${cityId}`); if (s) { setOrder(JSON.parse(s)); return } } catch {}
     const keys = [...staticPlaces, ...dynamicPlaces].map(p => placeKey(p))
     setOrder(keys)
-    localStorage.setItem(`cutemap-order-${cityId}`, JSON.stringify(keys))
+    localStorage.setItem(`bucketmap-order-${cityId}`, JSON.stringify(keys))
   }, [cityId])
 
   useEffect(() => {
@@ -343,7 +343,7 @@ function PlacesListView({ cityId, places, checked, onToggle, onDeletePlace, onAd
       const newKeys = allKeys.filter(k => !prevSet.has(k))
       if (newKeys.length === 0) return prev
       const updated = [...prev, ...newKeys]
-      localStorage.setItem(`cutemap-order-${cityId}`, JSON.stringify(updated))
+      localStorage.setItem(`bucketmap-order-${cityId}`, JSON.stringify(updated))
       return updated
     })
   }, [staticPlaces.length, dynamicPlaces.length, cityId])
@@ -363,10 +363,10 @@ function PlacesListView({ cityId, places, checked, onToggle, onDeletePlace, onAd
     if (dragIndex < 0 || dragOverIndex < 0 || dragIndex === dragOverIndex) { setDragIndex(-1); setDragOverIndex(-1); return }
     setOrder(prev => {
       const next = [...prev]; const [m] = next.splice(dragIndex, 1); next.splice(dragOverIndex, 0, m)
-      localStorage.setItem(`cutemap-order-${cityId}`, JSON.stringify(next)); return next
+      localStorage.setItem(`bucketmap-order-${cityId}`, JSON.stringify(next)); return next
     })
     const finalOrder = [...order]; const [mk] = finalOrder.splice(dragIndex, 1); finalOrder.splice(dragOverIndex, 0, mk)
-    finalOrder.forEach((key, idx) => { if (key.startsWith('cutemap-')) { reorderPlace(key.replace('cutemap-', ''), idx).catch(() => {}) } })
+    finalOrder.forEach((key, idx) => { if (key.startsWith('bucketmap-')) { reorderPlace(key.replace('bucketmap-', ''), idx).catch(() => {}) } })
     setDragIndex(-1); setDragOverIndex(-1)
   }, [dragIndex, dragOverIndex, order, cityId])
 
@@ -534,11 +534,11 @@ function LandingScreen({ onNewMap, onOpenMap }) {
 
   const openMap = () => {
     // Profile found + PIN verified (or no PIN) → store in session and open
-    localStorage.setItem('cutemap-user-id', userId.trim())
-    localStorage.setItem('cutemap-title', profile.title)
-    localStorage.setItem('cutemap-theme', profile.theme)
-    localStorage.setItem('cutemap-onboarded', '1')
-    sessionStorage.setItem('cutemap-unlocked', '1')
+    localStorage.setItem('bucketmap-user-id', userId.trim())
+    localStorage.setItem('bucketmap-title', profile.title)
+    localStorage.setItem('bucketmap-theme', profile.theme)
+    localStorage.setItem('bucketmap-onboarded', '1')
+    sessionStorage.setItem('bucketmap-unlocked', '1')
     onOpenMap()
   }
 
@@ -548,7 +548,7 @@ function LandingScreen({ onNewMap, onOpenMap }) {
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 8 }}>
           <div style={{ fontSize: 56, marginBottom: 12 }}>🗺️</div>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 28, fontWeight: 700, background: `linear-gradient(90deg, ${C.soft}, ${C.secondary})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: 2 }}>The Cute Map</div>
+          <div style={{ fontFamily: 'Georgia, serif', fontSize: 28, fontWeight: 700, background: `linear-gradient(90deg, ${C.soft}, ${C.secondary})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: 2 }}>BucketMap</div>
           <div style={{ fontSize: 13, color: C.mutedDim, fontStyle: 'italic', marginTop: 6 }}>your personal travel bucket list ♡</div>
         </div>
 
@@ -616,7 +616,7 @@ function LandingScreen({ onNewMap, onOpenMap }) {
 /* ── Onboarding ── */
 function OnboardingFlow({ onComplete }) {
   const [step, setStep] = useState(1)
-  const [title, setTitle] = useState('My Cute Map')
+  const [title, setTitle] = useState('My BucketMap')
   const [themeKey, setThemeKey] = useState('aurora')
   const [pinMode, setPinMode] = useState(false)
   const [pin, setPin] = useState('')
@@ -634,13 +634,13 @@ function OnboardingFlow({ onComplete }) {
     const finalPin = pinMode && pin ? pin : ''
     const userId = getUserId()
     setSaving(true)
-    localStorage.setItem('cutemap-title', title.trim() || 'My Cute Map')
-    localStorage.setItem('cutemap-theme', themeKey)
-    localStorage.setItem('cutemap-onboarded', '1')
-    sessionStorage.setItem('cutemap-unlocked', '1')
-    await saveProfile(userId, { title: title.trim() || 'My Cute Map', theme: themeKey, pin: finalPin }).catch(() => {})
+    localStorage.setItem('bucketmap-title', title.trim() || 'My BucketMap')
+    localStorage.setItem('bucketmap-theme', themeKey)
+    localStorage.setItem('bucketmap-onboarded', '1')
+    sessionStorage.setItem('bucketmap-unlocked', '1')
+    await saveProfile(userId, { title: title.trim() || 'My BucketMap', theme: themeKey, pin: finalPin }).catch(() => {})
     setSaving(false)
-    onComplete(themeKey, title.trim() || 'My Cute Map')
+    onComplete(themeKey, title.trim() || 'My BucketMap')
   }
 
   const card = { width: 'min(400px, 100%)', background: C.panel, border: `1px solid ${C.panelBorder}`, borderRadius: 20, overflow: 'hidden', transition: 'all 0.4s' }
@@ -663,7 +663,7 @@ function OnboardingFlow({ onComplete }) {
           <div style={{ padding: '24px' }}>
             <h2 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 700, color: C.text }}>Name your map</h2>
             <p style={{ margin: '0 0 20px', fontSize: 14, color: C.mutedDim, fontStyle: 'italic' }}>Give your map a personal title. You can change it later.</p>
-            <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="My Cute Map" maxLength={40} autoFocus style={{ ...iStyle, marginBottom: 20 }} />
+            <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="My BucketMap" maxLength={40} autoFocus style={{ ...iStyle, marginBottom: 20 }} />
             <button onClick={() => setStep(2)} style={btnP}>Continue →</button>
           </div>
         )}
@@ -723,7 +723,7 @@ function PinLockScreen({ C, mapTitle, storedPin, onUnlock }) {
           <div style={{ fontSize: 20, fontWeight: 700, color: C.text, marginBottom: 6 }}>{mapTitle}</div>
           <div style={{ fontSize: 12, color: C.mutedDim, fontStyle: 'italic', marginBottom: 4 }}>Enter your PIN to unlock ♡</div>
         </div>
-        <PinInput storedPin={storedPin} C={C} onSuccess={() => { sessionStorage.setItem('cutemap-unlocked', '1'); onUnlock() }} />
+        <PinInput storedPin={storedPin} C={C} onSuccess={() => { sessionStorage.setItem('bucketmap-unlocked', '1'); onUnlock() }} />
       </div>
     </div>
   )
@@ -731,8 +731,8 @@ function PinLockScreen({ C, mapTitle, storedPin, onUnlock }) {
 
 /* ── Settings panel ── */
 function SettingsPanel({ onClose, onThemeChange, onDisconnect, C, userId }) {
-  const [titleVal, setTitleVal] = useState(localStorage.getItem('cutemap-title') || 'My Cute Map')
-  const [themeKey, setThemeKey] = useState(localStorage.getItem('cutemap-theme') || 'aurora')
+  const [titleVal, setTitleVal] = useState(localStorage.getItem('bucketmap-title') || 'My BucketMap')
+  const [themeKey, setThemeKey] = useState(localStorage.getItem('bucketmap-theme') || 'aurora')
   const [pinSection, setPinSection] = useState('idle')
   const [oldPin, setOldPin] = useState(''); const [newPin, setNewPin] = useState(''); const [confirmPin, setConfirmPin] = useState('')
   const [pinErr, setPinErr] = useState('')
@@ -740,17 +740,17 @@ function SettingsPanel({ onClose, onThemeChange, onDisconnect, C, userId }) {
   const [saving, setSaving] = useState(false)
   const [disconnectStep, setDisconnectStep] = useState(0) // 0=idle 1=show-id 2=confirm
 
-  const storedPin = useRef(localStorage.getItem('cutemap-stored-pin') || '')
+  const storedPin = useRef(localStorage.getItem('bucketmap-stored-pin') || '')
   // We store pin in profile (Supabase) — read from profile
   const [profilePin, setProfilePin] = useState('')
   useEffect(() => { fetchProfile(userId).then(p => { if (p) setProfilePin(p.pin || '') }) }, [userId])
 
-  const applyTheme = (key) => { setThemeKey(key); localStorage.setItem('cutemap-theme', key); onThemeChange(key) }
+  const applyTheme = (key) => { setThemeKey(key); localStorage.setItem('bucketmap-theme', key); onThemeChange(key) }
 
   const saveSettings = async () => {
     setSaving(true)
-    localStorage.setItem('cutemap-title', titleVal.trim() || 'My Cute Map')
-    await saveProfile(userId, { title: titleVal.trim() || 'My Cute Map', theme: themeKey, pin: profilePin }).catch(() => {})
+    localStorage.setItem('bucketmap-title', titleVal.trim() || 'My BucketMap')
+    await saveProfile(userId, { title: titleVal.trim() || 'My BucketMap', theme: themeKey, pin: profilePin }).catch(() => {})
     setSaving(false)
     onThemeChange(themeKey)
     onClose()
@@ -904,17 +904,17 @@ function SettingsPanel({ onClose, onThemeChange, onDisconnect, C, userId }) {
 export default function App() {
   // Determine initial screen
   const getInitialScreen = () => {
-    const onboarded = localStorage.getItem('cutemap-onboarded') === '1'
-    const userId = localStorage.getItem('cutemap-user-id')
+    const onboarded = localStorage.getItem('bucketmap-onboarded') === '1'
+    const userId = localStorage.getItem('bucketmap-user-id')
     if (!onboarded || !userId) return 'landing'
     return 'map'
   }
 
   const [screen, setScreen] = useState(getInitialScreen) // 'landing' | 'onboarding' | 'map'
-  const [themeKey, setThemeKey] = useState(() => localStorage.getItem('cutemap-theme') || 'aurora')
-  const [mapTitle, setMapTitle] = useState(() => localStorage.getItem('cutemap-title') || 'My Cute Map')
+  const [themeKey, setThemeKey] = useState(() => localStorage.getItem('bucketmap-theme') || 'aurora')
+  const [mapTitle, setMapTitle] = useState(() => localStorage.getItem('bucketmap-title') || 'My BucketMap')
   const [storedPin, setStoredPin] = useState(null) // null = not fetched yet
-  const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem('cutemap-unlocked') === '1')
+  const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem('bucketmap-unlocked') === '1')
   const [showSettings, setShowSettings] = useState(false)
 
   const C = themeOf(themeKey)
@@ -932,8 +932,8 @@ export default function App() {
   const [supabasePlaces, setSupabasePlaces] = useState([])
   const [destinations, setDestinations] = useState([])
   const [showAddDest, setShowAddDest] = useState(false)
-  const [checked, setChecked] = useState(() => { try { return JSON.parse(localStorage.getItem('cutemap-checked') || '{}') } catch { return {} } })
-  const [hiddenCities, setHiddenCities] = useState(() => { try { return JSON.parse(localStorage.getItem('cutemap-hidden-cities') || '[]') } catch { return [] } })
+  const [checked, setChecked] = useState(() => { try { return JSON.parse(localStorage.getItem('bucketmap-checked') || '{}') } catch { return {} } })
+  const [hiddenCities, setHiddenCities] = useState(() => { try { return JSON.parse(localStorage.getItem('bucketmap-hidden-cities') || '[]') } catch { return [] } })
 
   const [tr, setTr] = useState({ tx: 0, ty: 0, z: 1.2 })
   const mapRef = useRef(null)
@@ -982,20 +982,20 @@ export default function App() {
       if (remoteChecked.length > 0) {
         const map = {}
         remoteChecked.forEach(r => { map[r.item_key] = r.checked })
-        setChecked(prev => { const merged = { ...prev, ...map }; localStorage.setItem('cutemap-checked', JSON.stringify(merged)); return merged })
+        setChecked(prev => { const merged = { ...prev, ...map }; localStorage.setItem('bucketmap-checked', JSON.stringify(merged)); return merged })
       }
     }
     load()
     return () => { cancelled = true }
   }, [screen, unlocked])
 
-  const handleToggle = useCallback((key) => { setChecked(prev => { const next = { ...prev, [key]: !prev[key] }; localStorage.setItem('cutemap-checked', JSON.stringify(next)); setCheckedItem(key, next[key]).catch(() => {}); return next }) }, [])
+  const handleToggle = useCallback((key) => { setChecked(prev => { const next = { ...prev, [key]: !prev[key] }; localStorage.setItem('bucketmap-checked', JSON.stringify(next)); setCheckedItem(key, next[key]).catch(() => {}); return next }) }, [])
   const handleAddPlace = useCallback((place) => { setSupabasePlaces(prev => [...prev, place]) }, [])
   const handleAddDestination = useCallback((dest) => { setDestinations(prev => [...prev, dest]); setSelectedCity(dest); setShowAddDest(false) }, [])
   const handleDeleteDestination = useCallback(async (id) => { const ok = await deleteDestination(id); if (ok) setDestinations(prev => prev.filter(d => d.id !== id)) }, [])
   const handleDeletePlace = useCallback(async (placeId) => { const ok = await deletePlace(placeId); if (ok) setSupabasePlaces(prev => prev.filter(p => p.id !== placeId)) }, [])
   const handleEditPlace = useCallback(async (placeId, name, description) => { const updated = await updatePlace(placeId, name, description); if (updated) setSupabasePlaces(prev => prev.map(p => p.id === placeId ? updated : p)) }, [])
-  const handleHideCity = useCallback((cityId) => { setHiddenCities(prev => { const next = [...prev, cityId]; localStorage.setItem('cutemap-hidden-cities', JSON.stringify(next)); return next }) }, [])
+  const handleHideCity = useCallback((cityId) => { setHiddenCities(prev => { const next = [...prev, cityId]; localStorage.setItem('bucketmap-hidden-cities', JSON.stringify(next)); return next }) }, [])
   const zoomIn = useCallback(() => { setTr(prev => clamp(prev.tx, prev.ty, Math.min(24, prev.z * 1.5))) }, [])
   const zoomOut = useCallback(() => { setTr(prev => clamp(prev.tx, prev.ty, Math.max(1, prev.z / 1.5))) }, [])
 
@@ -1032,7 +1032,7 @@ export default function App() {
   useEffect(() => { allCitiesRef.current = allCities }, [allCities])
 
   const handleDisconnect = () => {
-    sessionStorage.removeItem('cutemap-unlocked')
+    sessionStorage.removeItem('bucketmap-unlocked')
     setScreen('landing')
     setShowSettings(false)
     setSelectedCity(null)
@@ -1049,15 +1049,15 @@ export default function App() {
     return <LandingScreen
       onNewMap={() => {
         // Generate fresh user ID for new map
-        localStorage.removeItem('cutemap-user-id')
-        localStorage.removeItem('cutemap-onboarded')
-        localStorage.removeItem('cutemap-title')
-        localStorage.removeItem('cutemap-theme')
+        localStorage.removeItem('bucketmap-user-id')
+        localStorage.removeItem('bucketmap-onboarded')
+        localStorage.removeItem('bucketmap-title')
+        localStorage.removeItem('bucketmap-theme')
         setScreen('onboarding')
       }}
       onOpenMap={() => {
-        setThemeKey(localStorage.getItem('cutemap-theme') || 'aurora')
-        setMapTitle(localStorage.getItem('cutemap-title') || 'My Cute Map')
+        setThemeKey(localStorage.getItem('bucketmap-theme') || 'aurora')
+        setMapTitle(localStorage.getItem('bucketmap-title') || 'My BucketMap')
         setStoredPin(null)
         setUnlocked(true) // PIN was already verified in landing screen
         setScreen('map')
@@ -1149,7 +1149,7 @@ export default function App() {
       <SidePanel city={selectedCity} checked={checked} onToggle={handleToggle} onClose={() => setSelectedCity(null)} supabasePlaces={supabasePlaces} onDeleteDestination={handleDeleteDestination} onDeletePlace={handleDeletePlace} onAddPlace={handleAddPlace} onEditPlace={handleEditPlace} hiddenCities={hiddenCities} onHideCity={handleHideCity} C={C} />
 
       {showSettings && (
-        <SettingsPanel C={C} userId={userId} onClose={() => { setShowSettings(false); setMapTitle(localStorage.getItem('cutemap-title') || 'My Cute Map') }} onThemeChange={(key) => { setThemeKey(key); setMapTitle(localStorage.getItem('cutemap-title') || 'My Cute Map') }} onDisconnect={handleDisconnect} />
+        <SettingsPanel C={C} userId={userId} onClose={() => { setShowSettings(false); setMapTitle(localStorage.getItem('bucketmap-title') || 'My BucketMap') }} onThemeChange={(key) => { setThemeKey(key); setMapTitle(localStorage.getItem('bucketmap-title') || 'My BucketMap') }} onDisconnect={handleDisconnect} />
       )}
     </div>
   )
