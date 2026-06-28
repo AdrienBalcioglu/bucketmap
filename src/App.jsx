@@ -3,6 +3,7 @@ import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps
 import citiesDatabase from './citiesDatabase'
 import { getLockoutRemaining } from './lib/auth'
 import { fetchPlaces, addPlace, fetchCheckedItems, setCheckedItem, fetchDestinations, addDestination, deleteDestination, reorderPlace, deletePlace, updatePlace, fetchProfile, saveProfile } from './lib/db'
+import { fetchPOIs } from './lib/poi'
 import { getUserId } from './lib/userId'
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
@@ -409,6 +410,42 @@ function SidePanel({ city, checked, onToggle, onClose, supabasePlaces, onDeleteD
     return { done, total: sp.length }
   }
 
+  // ── POI suggestions state ──
+  const [poiState, setPoiState] = useState('idle') // 'idle' | 'loading' | 'results' | 'empty' | 'error'
+  const [poiResults, setPoiResults] = useState([])
+  const [poiAdding, setPoiAdding] = useState({})
+
+  const handleSuggestPlaces = async () => {
+    if (!activeCityId) return
+    const cityObj = allCitiesRef.current.find(c => c.id === activeCityId || c.cities?.some(s => s.id === activeCityId))
+    if (!cityObj) return
+    let lat, lng
+    if (cityObj.type === 'city') { lng = cityObj.coordinates[0]; lat = cityObj.coordinates[1] }
+    else {
+      const sub = cityObj.cities?.find(c => c.id === activeCityId)
+      if (!sub) return
+      const dbCity = citiesDatabase.find(c => c.city === sub.name)
+      if (dbCity) { lng = dbCity.lng; lat = dbCity.lat }
+      else { lng = cityObj.coordinates[0]; lat = cityObj.coordinates[1] }
+    }
+    setPoiState('loading'); setPoiResults([])
+    const results = await fetchPOIs(lat, lng, 3000)
+    if (results === null) { setPoiState('error'); return }
+    if (results.length === 0) { setPoiState('empty'); return }
+    setPoiResults(results)
+    setPoiState('results')
+  }
+
+  const handleAddPoi = async (poi) => {
+    if (!activeCityId) return
+    setPoiAdding(prev => ({ ...prev, [poi.name]: true }))
+    try {
+      const row = await addPlace(activeCityId, poi.name, `${poi.category} (via OpenStreetMap)`)
+      if (row && onAddPlace) onAddPlace(row)
+    } catch { /* ignore */ }
+    finally { setPoiAdding(prev => ({ ...prev, [poi.name]: false })) }
+  }
+
   const activeCityId = selectedSubCity?.id || (city && !isCountry ? city.id : null)
   const activeCityPlaces = selectedSubCity?.places || (city && !isCountry ? city.places : [])
   const dynamicForActive = supabasePlaces.filter(p => p.city_id === activeCityId)
@@ -439,6 +476,35 @@ function SidePanel({ city, checked, onToggle, onClose, supabasePlaces, onDeleteD
               </div>
             </div>
             {(selectedSubCity || !isCountry) && city.active && <ProgressBar done={activeDone} total={allActivePlaces.length} C={C} />}
+            {(selectedSubCity || !isCountry) && city.active && (
+              <div style={{ marginTop: 14 }}>
+                {poiState === 'idle' && (
+                  <button onClick={handleSuggestPlaces} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px dashed ${C.primaryDim}`, borderRadius: 10, padding: '9px 14px', color: C.primary, fontSize: 13, fontWeight: 600, cursor: 'pointer', WebkitTapHighlightColor: 'transparent', fontFamily: 'inherit' }}>
+                    <span style={{ fontSize: 16 }}>🔍</span> Suggest places
+                  </button>
+                )}
+                {poiState === 'loading' && <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: C.muted, fontSize: 13, fontStyle: 'italic' }}><span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⏳</span> Searching OpenStreetMap…</div>}
+                {poiState === 'error' && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#ff4d6a', fontSize: 12, fontStyle: 'italic' }}>⚠️ Overpass unavailable, try later.</div>}
+                {poiState === 'empty' && <div style={{ color: C.mutedDim, fontSize: 12, fontStyle: 'italic' }}>No suggestions found nearby.</div>}
+                {poiState === 'results' && (
+                  <div style={{ background: '#ffffff06', borderRadius: 10, border: `1px solid ${C.primaryDim}`, overflow: 'hidden' }}>
+                    <div style={{ fontSize: 10, color: C.mutedDim, padding: '8px 14px 4px', fontStyle: 'italic' }}>Suggestions from OpenStreetMap</div>
+                    {poiResults.map((poi, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderTop: i > 0 ? '1px solid #ffffff08' : 'none' }}>
+                        <span style={{ fontSize: 18, flexShrink: 0 }}>{poi.emoji}</span>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{poi.name}</div>
+                          <div style={{ fontSize: 11, color: C.mutedDim }}>{poi.category}</div>
+                        </div>
+                        <button onClick={() => handleAddPoi(poi)} disabled={poiAdding[poi.name]} style={{ background: poiAdding[poi.name] ? '#ffffff10' : C.primary, border: 'none', borderRadius: 8, padding: '5px 12px', color: poiAdding[poi.name] ? C.mutedDim : C.bg, fontSize: 12, fontWeight: 700, cursor: 'pointer', WebkitTapHighlightColor: 'transparent', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                          {poiAdding[poi.name] ? '…' : 'Add +'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             {!isCountry && city.active && (
               <div style={{ marginTop: 10 }}>
                 {!showDeleteDest ? (
