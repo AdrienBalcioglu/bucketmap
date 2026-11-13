@@ -1,4 +1,5 @@
--- The Cute Map — Supabase Schema
+-- BucketMap — Supabase schema
+-- Tables keep their original `cutemap_` prefix so existing databases keep working.
 -- Run this once in your Supabase SQL Editor.
 -- Safe to re-run: uses IF NOT EXISTS.
 
@@ -36,7 +37,7 @@ CREATE TABLE IF NOT EXISTS cutemap_checked_items (
 -- User profiles (title, theme, pin — stored remotely for cross-device restore)
 CREATE TABLE IF NOT EXISTS cutemap_profiles (
   user_id TEXT PRIMARY KEY,
-  title TEXT DEFAULT 'My Cute Map',
+  title TEXT DEFAULT 'My BucketMap',
   theme TEXT DEFAULT 'aurora',
   pin TEXT DEFAULT '',
   updated_at TIMESTAMPTZ DEFAULT NOW()
